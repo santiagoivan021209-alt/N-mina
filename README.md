@@ -1,2 +1,2 @@
-# N-mina-
+# Nomina 
 Gestión del personal 
