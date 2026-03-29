@@ -339,7 +339,7 @@ window.addEventListener('load', ()=>{
         <span class="info-pill">Fecha_Ingreso</span><span class="info-pill">Antiguedad</span><span class="info-pill">Jornada</span>
         <span class="info-pill">Convenio</span><span class="info-pill">Activo</span><span class="info-pill">Finalizacion</span>
         <span class="info-pill">Lugar_Trabajo</span><span class="info-pill">Obra_Social</span><span class="info-pill">Tipo_Contrato</span>
-        <span class="info-pill">Tipo_Hs_Mes</span><span class="info-pill">Tipo_Cuenta</span><span class="info-pill">CBU</span>
+        <span class="info-pill">Tipo_Hs_Mes</span><span class="info-pill">Tipo_Cuenta</span>
         <span class="info-pill">Alias</span><span class="info-pill">Alta_ARCA</span><span class="info-pill">Baja_ARCA</span>
         <span class="info-pill">CUD</span><span class="info-pill">Vencimiento_CUD</span><span class="info-pill">Sordo_Hipoacusia</span>
         <span class="info-pill">Contacto_Emergencia</span><span class="info-pill">Estudios</span><span class="info-pill">Escuela_Valores</span>
@@ -417,7 +417,7 @@ window.addEventListener('load', ()=>{
     <div class="card">
       <div class="card-title">¿Qué querés consultar?</div>
       <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
-        <input id="consultaInput" placeholder='Ej: "Colaboradores activos de Moreno" o "Zona Norte con CUD" o "Todos de CM sin CBU"'
+        <input id="consultaInput" placeholder='Ej: "Colaboradores activos de Moreno" o "Zona Norte con CUD" o "Todos de CM activos"'
           style="flex:1;min-width:260px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:10px 14px;outline:none;transition:border-color .15s;"
           onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
           onkeydown="if(event.key==='Enter')ejecutarConsulta()">
@@ -428,7 +428,6 @@ window.addEventListener('load', ()=>{
       <!-- Sugerencias rápidas -->
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
         <span style="font-size:10px;color:var(--muted);margin-right:2px;line-height:24px;">Sugerencias:</span>
-        <button onclick="consultaRapida(this)" class="btn btn-secondary btn-sm">Activos sin CBU</button>
         <button onclick="consultaRapida(this)" class="btn btn-secondary btn-sm">Con CUD o hipoacusia</button>
         <button onclick="consultaRapida(this)" class="btn btn-secondary btn-sm">Empresa CM activos</button>
         <button onclick="consultaRapida(this)" class="btn btn-secondary btn-sm">Empresa IM activos</button>
@@ -640,12 +639,8 @@ window.addEventListener('load', ()=>{
       <div class="form-section-title">Datos Bancarios</div>
       <div class="form-row">
         <div class="form-group"><label>Tipo de Cuenta / Banco</label><input id="empTipoCuenta" placeholder="BBVA Argentina / Mercado Pago..."></div>
-        <div class="form-group">
-          <label>CBU / CVU (22 dígitos)</label>
-          <input id="empCbu" placeholder="0170351940000034318771" maxlength="22" oninput="validarCbu(this)">
-          <span class="hint" id="empCbuHint"></span>
-        </div>
         <div class="form-group"><label>Alias</label><input id="empAlias" placeholder="juan.garcia.banco"></div>
+        <div class="form-group"></div>
       </div>
     </div>
 
@@ -887,7 +882,7 @@ function ne(e){
     altaArca:nv(e,'altaArca')||'',
     bajaArca:nv(e,'bajaArca')||'',
     tipoCuenta:nv(e,'tipoCuenta')||'',
-    cbu:String(nv(e,'cbu')||''),
+    cbu:'',
     alias:nv(e,'alias')||'',
     cud:nv(e,'cud')||'',
     vencCud:nv(e,'vencCud')||'',
@@ -965,7 +960,7 @@ function renderEmpleados(){
       // Busca en todos los campos de texto del colaborador
       const haystack=[
         e.nombre,e.cuil,e.dni,e.legajo,e.celular,e.email,
-        e.direccion,e.domicilio,e.cp,e.alias,e.cbu,e.tipoCuenta,
+        e.direccion,e.domicilio,e.cp,e.alias,e.tipoCuenta,
         e.convenio,e.obraSocial,e.jornada,e.tipoContrato,
         e.contactoEmergencia,e.comentarios,e.finalizacion,
         ...(e.servicios||[])
@@ -981,7 +976,6 @@ function renderEmpleados(){
     const srvB=(e.servicios||[]).map(s=>`<span class="badge srv" style="font-size:9px">${s}</span>`).join('')||'—';
     const empB=e.empresa?`<span class="badge ${e.empresa.toLowerCase()}">${e.empresa}</span>`:'—';
     const actB=`<span class="badge ${e.activo==='SI'?'activo':'inactivo'}">${e.activo||'—'}</span>`;
-    const cbuShort=e.cbu?e.cbu.slice(0,10)+'...':'—';
     return`<tr>
       <td style="white-space:nowrap"><div class="flex-gap" style="flex-wrap:nowrap">
         <button class="btn btn-secondary btn-sm" onclick="editarEmpleado(${i})" title="Editar">✏️</button>
@@ -992,7 +986,6 @@ function renderEmpleados(){
       <td>${empB}</td>
       <td style="font-size:10px;color:var(--muted)">${e.cuil||'—'}</td>
       <td style="font-size:10px;color:var(--muted)">${e.dni||'—'}</td>
-      <td style="font-size:10px" title="${e.cbu||''}">${cbuShort}</td>
       <td style="font-size:10px">${e.alias||'—'}</td>
       <td style="font-size:10px;color:var(--muted)">${e.tipoCuenta||'—'}</td>
       <td class="moneda">$${e.sueldo.toLocaleString('es-AR')}</td>
@@ -1005,7 +998,7 @@ function renderEmpleados(){
   cont.innerHTML=`<table><thead><tr>
     <th style="width:70px"></th>
     <th>Leg.</th><th>Nombre</th><th>Emp.</th><th>CUIL</th><th>DNI</th>
-    <th>CBU/CVU</th><th>Alias</th><th>Tipo Cta.</th><th>Sueldo</th>
+    <th>Alias</th><th>Tipo Cta.</th><th>Sueldo</th>
     <th>Lugar/es Trabajo</th><th>Ingreso</th><th>Antigüedad</th><th>Activo</th>
   </tr></thead><tbody>${rows}</tbody></table>`;
 }
@@ -1044,13 +1037,13 @@ function renderPreviaPagos(){
   const rows=activos.map(e=>`<tr>
     <td style="font-weight:500">${e.nombre}</td>
     <td style="font-size:10px;color:var(--muted)">${e.cuil||'—'}</td>
-    <td style="font-size:11px;color:var(--muted)">${e.cbu||e.alias||'—'}</td>
+    <td style="font-size:11px;color:var(--muted)">${e.alias||'—'}</td>
     <td style="font-size:10px;color:var(--muted)">${e.tipoCuenta||'—'}</td>
     <td class="moneda">$${e.sueldo.toLocaleString('es-AR')}</td>
     <td><span class="badge ${(e.empresa||'').toLowerCase()||'pendiente'}">${e.empresa||'—'}</span></td>
   </tr>`).join('');
   cont.innerHTML=`<table>
-    <thead><tr><th>Colaborador</th><th>CUIL</th><th>CBU/CVU/Alias</th><th>Tipo Cta.</th><th>Monto</th><th>Empresa</th></tr></thead>
+    <thead><tr><th>Colaborador</th><th>CUIL</th><th>Alias</th><th>Tipo Cta.</th><th>Monto</th><th>Empresa</th></tr></thead>
     <tbody>${rows}</tbody>
     <tfoot><tr><td colspan="4" style="padding:9px 11px;color:var(--muted);font-size:10px">TOTAL</td>
     <td class="moneda" style="padding:9px 11px;font-size:14px">$${total.toLocaleString('es-AR')}</td><td></td></tr></tfoot>
@@ -1103,14 +1096,7 @@ function calcularEdad(){
   if(hoy.getMonth()-nac.getMonth()<0||(hoy.getMonth()===nac.getMonth()&&hoy.getDate()<nac.getDate())) edad--;
   document.getElementById('empEdad').value=edad>0?edad:'';
 }
-function validarCbu(input){
-  const val=input.value.replace(/\D/g,'');
-  input.value=val.slice(0,22);
-  const hint=document.getElementById('empCbuHint');
-  if(!val.length){hint.textContent='';return;}
-  if(val.length<22){hint.style.color='var(--accent2)';hint.textContent=val.length+'/22 dígitos';}
-  else{hint.style.color='var(--success)';hint.textContent='✓ 22 dígitos OK';}
-}
+function validarCbu(input){}
 function formatearCuit(input,hintId){
   let val=input.value.replace(/\D/g,'').slice(0,11),fmt=val;
   if(val.length>2) fmt=val.slice(0,2)+'-'+val.slice(2);
@@ -1149,10 +1135,9 @@ function abrirModalEmpleado(){
    'empDireccion','empDomicilio','empCp','empCelular','empEmail','empContactoEmergencia','empEstudios',
    'empFechaIngreso','empAntiguedad','empJornada','empTipoHs','empConvenio','empTipoContrato',
    'empObraSocial','empSueldo','empInicio','empFinalizacion','empAltaArca','empBajaArca',
-   'empTipoCuenta','empCbu','empAlias','empVencCud','empComentarios'].forEach(id=>sf(id,''));
+   'empTipoCuenta','empAlias','empVencCud','empComentarios'].forEach(id=>sf(id,''));
   sf('empActivo','SI');sf('empEmpresa','');sf('empCud','');sf('empSordo','');
   sf('empEscuelaValores','');sf('empCv','');sf('empFotoDni','');sf('empPlanillaDom','');sf('empEpp','');
-  document.getElementById('empCbuHint').textContent='';
   document.getElementById('empCuilHint').textContent='';
   poblarSrvPickList();renderEmpServicios();
   document.getElementById('modalEmp').classList.add('open');
@@ -1174,12 +1159,11 @@ function editarEmpleado(i){
   sf('empObraSocial',e.obraSocial);sf('empSueldo',e.sueldo);
   sf('empInicio',e.inicio);sf('empFinalizacion',e.finalizacion);
   sf('empAltaArca',e.altaArca);sf('empBajaArca',e.bajaArca);
-  sf('empTipoCuenta',e.tipoCuenta);sf('empCbu',e.cbu);sf('empAlias',e.alias);
+  sf('empTipoCuenta',e.tipoCuenta);sf('empAlias',e.alias);
   sf('empCud',e.cud);sf('empVencCud',e.vencCud);sf('empSordo',e.sordo);
   sf('empEscuelaValores',e.escuelaValores);sf('empCv',e.cv);
   sf('empFotoDni',e.fotoDni);sf('empPlanillaDom',e.planillaDom);
   sf('empEpp',e.epp);sf('empComentarios',e.comentarios);
-  document.getElementById('empCbuHint').textContent='';
   document.getElementById('empCuilHint').textContent='';
   poblarSrvPickList();renderEmpServicios();
   document.getElementById('modalEmp').classList.add('open');
@@ -1188,10 +1172,8 @@ function editarEmpleado(i){
 function guardarEmpleado(){
   const nombre=gf('empNombre').trim();
   const sueldo=parseFloat(gf('empSueldo'));
-  const cbu=gf('empCbu').trim();
   if(!nombre){showToast('El nombre es obligatorio','error');return;}
   if(sueldo&&isNaN(sueldo)){showToast('Sueldo inválido','error');return;}
-  if(cbu&&/^\d+$/.test(cbu)&&cbu.length!==22){showToast('CBU/CVU debe tener 22 dígitos','error');return;}
   const emp={
     nombre,cuil:gf('empCuil'),legajo:gf('empLegajo'),dni:gf('empDni'),
     empresa:gf('empEmpresa'),activo:gf('empActivo'),
@@ -1204,7 +1186,7 @@ function guardarEmpleado(){
     obraSocial:gf('empObraSocial'),sueldo:isNaN(sueldo)?0:sueldo,
     inicio:gf('empInicio'),finalizacion:gf('empFinalizacion'),
     altaArca:gf('empAltaArca'),bajaArca:gf('empBajaArca'),
-    tipoCuenta:gf('empTipoCuenta'),cbu,alias:gf('empAlias'),
+    tipoCuenta:gf('empTipoCuenta'),cbu:'',alias:gf('empAlias'),
     cud:gf('empCud'),vencCud:gf('empVencCud'),sordo:gf('empSordo'),
     escuelaValores:gf('empEscuelaValores'),cv:gf('empCv'),
     fotoDni:gf('empFotoDni'),planillaDom:gf('empPlanillaDom'),
@@ -1282,7 +1264,6 @@ const COL_MAP={
   'baja_arca':'bajaArca',
   // Bancario
   'tipo_cuenta':'tipoCuenta',
-  'cbu':'cbu',
   'alias':'alias',
   // Salud
   'cud':'cud',
@@ -1512,7 +1493,7 @@ async function confirmarImport(){
       altaArca:get('altaArca'),
       bajaArca:get('bajaArca'),
       tipoCuenta:get('tipoCuenta'),
-      cbu:get('cbu'),
+      cbu:'',
       alias:get('alias'),
       cud,
       vencCud,
@@ -1577,7 +1558,7 @@ function exportarBanco(banco){
   let contenido='',filename='',mimeType='text/plain';
   if(banco==='comafi'){
     contenido=activos.map(e=>{
-      const cbu=e.cbu||e.alias||'';
+      const cbu=e.alias||'';
       const cuil=(e.cuil||'').replace(/\D/g,'');
       const concepto=('Sueldo '+mesLabel).slice(0,30);
       return`HAB|${cbu}|${e.sueldo.toFixed(2)}|ARS|${concepto}|${cuil}|${e.nombre}`;
@@ -1587,10 +1568,10 @@ function exportarBanco(banco){
   }
   if(banco==='bbva'){
     const bom='\uFEFF';
-    const header='CUIT/CUIL;APELLIDO Y NOMBRE;CBU/CVU;IMPORTE;CONCEPTO;MONEDA';
+    const header='CUIT/CUIL;APELLIDO Y NOMBRE;ALIAS;IMPORTE;CONCEPTO;MONEDA';
     const rows=activos.map(e=>{
       const cuil=(e.cuil||'').replace(/\D/g,'');
-      return`${cuil};${e.nombre};${e.cbu||e.alias||''};${e.sueldo.toFixed(2).replace('.',',')};${'Sueldo '+mesLabel};ARS`;
+      return`${cuil};${e.nombre};${e.alias||''};${e.sueldo.toFixed(2).replace('.',',')};${'Sueldo '+mesLabel};ARS`;
     });
     contenido=bom+header+'\n'+rows.join('\n');
     filename=`nomina_bbva_${mes}.csv`;mimeType='text/csv;charset=utf-8;';
@@ -1651,7 +1632,7 @@ async function ejecutarConsulta(){
       activo: c.activo,
       servicios: (c.servicios||[]).join(', '),
       cuil: c.cuil,
-      cbu: c.cbu ? '✓' : '',
+
       alias: c.alias ? '✓' : '',
       cud: c.cud,
       sordo: c.sordo,
@@ -1754,7 +1735,7 @@ function renderConsultaTabla(lista, titulo, descripcion){
       <td style="font-size:10px;color:var(--muted)">${e.cuil||'—'}</td>
       <td style="font-size:10px;color:var(--muted)">${e.celular||'—'}</td>
       <td style="font-size:10px;color:var(--muted)">${e.email||'—'}</td>
-      <td style="font-size:10px;color:var(--muted)">${e.cbu||e.alias||'—'}</td>
+      <td style="font-size:10px;color:var(--muted)">${e.alias||'—'}</td>
       <td style="font-size:10px;color:var(--muted)">${e.fechaIngreso||'—'}</td>
     </tr>`;
   }).join('');
@@ -1762,7 +1743,7 @@ function renderConsultaTabla(lista, titulo, descripcion){
   cont.innerHTML = `<table>
     <thead><tr>
       <th>Nombre</th><th>Empresa</th><th>Activo</th><th>Lugar/es</th>
-      <th>CUIL</th><th>Celular</th><th>Email</th><th>CBU/Alias</th><th>Ingreso</th>
+      <th>CUIL</th><th>Celular</th><th>Email</th><th>Alias</th><th>Ingreso</th>
     </tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
@@ -1774,7 +1755,7 @@ function descargarConsulta(){
   const bom = '\uFEFF';
   const headers = [
     'Nombre','CUIL','DNI','Empresa','Activo','Legajo',
-    'Lugar_Trabajo','CBU','Alias','Tipo_Cuenta',
+    'Lugar_Trabajo','Alias','Tipo_Cuenta',
     'Celular','Email','Fecha_Ingreso','Antiguedad',
     'Jornada','Convenio','Obra_Social','Tipo_Contrato',
     'Activo','CUD','Vencimiento_CUD','Sordo_Hipoacusia',
@@ -1783,7 +1764,7 @@ function descargarConsulta(){
   ];
   const rows = consultaResultados.map(e => [
     e.nombre, e.cuil, e.dni, e.empresa, e.activo, e.legajo,
-    (e.servicios||[]).join(' / '), e.cbu, e.alias, e.tipoCuenta,
+    (e.servicios||[]).join(' / '), e.alias, e.tipoCuenta,
     e.celular, e.email, e.fechaIngreso, e.antiguedad,
     e.jornada, e.convenio, e.obraSocial, e.tipoContrato,
     e.activo, e.cud, e.vencCud, e.sordo,
